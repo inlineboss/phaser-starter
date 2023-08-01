@@ -1,0 +1,25 @@
+{
+  "name": "phaser-starter",
+  "version": "0.0.1",
+  "description": "A boilerplate to start developping a PixiJS game or animation using TypeScript (VS Code & Chrome).",
+  "scripts": {
+    "dev": "webpack serve -c webpack.config.js",
+    "build": "webpack"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "clean-webpack-plugin": "^4.0.0",
+    "copy-webpack-plugin": "11.0.0",
+    "html-webpack-plugin": "5.5.3",
+    "prettier": "3.0.0",
+    "ts-loader": "^9.4.4",
+    "typescript": "5.1.6",
+    "webpack": "5.88.2",
+    "webpack-cli": "5.1.4",
+    "webpack-dev-server": "^4.15.1"
+  },
+  "dependencies": {
+    "phaser": "^3.60.0"
+  }
+}
