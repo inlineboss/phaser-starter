@@ -1,35 +1,71 @@
-import { GameObjects, Physics, Scene } from "phaser";
+import { GameObjects, Physics, RIGHT, Scene } from "phaser";
 
-export type PlayerDirection = 'undefined' | 'idle' | 'left' | 'right' | 'up' | 'down';
+enum XDirection {
+    Right,
+    Left
+}
+enum YDirection {
+    Up,
+    Down
+}
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
+
+    private xdir: XDirection = XDirection.Right;
+    private ydir: YDirection = YDirection.Down;
+
     private keyW: Phaser.Input.Keyboard.Key;
     private keyA: Phaser.Input.Keyboard.Key;
     private keyS: Phaser.Input.Keyboard.Key;
     private keyD: Phaser.Input.Keyboard.Key;
+    private keySpace: Phaser.Input.Keyboard.Key;
+
+    private keyJ: Phaser.Input.Keyboard.Key;
+    private keyK: Phaser.Input.Keyboard.Key;
+    private keyL: Phaser.Input.Keyboard.Key;
+    private keyN: Phaser.Input.Keyboard.Key;
 
     constructor(scene: Scene, x: number, y: number) {
         super(scene, x, y, 'player');
         this.scene.add.existing(this);
-        this.create();
-        this.state = 'undefined';
+        this.setName('Player')
 
         // KEYS
         this.keyD = this.scene.input.keyboard?.addKey('D')!;
         this.keyW = this.scene.input.keyboard?.addKey('W')!;
         this.keyA = this.scene.input.keyboard?.addKey('A')!;
         this.keyS = this.scene.input.keyboard?.addKey('S')!;
-    }
+        this.keySpace = this.scene.input.keyboard?.addKey('SPACE')!;
 
-
-    public state: PlayerDirection;
-
-    protected getBody(): Physics.Arcade.Body {
-        return this.body as Physics.Arcade.Body;
+        this.keyJ = this.scene.input.keyboard?.addKey('j')!;
+        this.keyK = this.scene.input.keyboard?.addKey('k')!;
+        this.keyL = this.scene.input.keyboard?.addKey('l')!;
+        this.keyN = this.scene.input.keyboard?.addKey('n')!;
     }
 
     create() {
         this.createAnimation();
+        // this.createCamera();
+    }
+
+    private setDefaultBox() {
+        this.setSize(22, 30);
+    }
+    public static preload(scene: Scene) {
+        scene.load.spritesheet('player-idle', 'assets/players/idle.png', { frameWidth: 64, frameHeight: 64 });
+        scene.load.spritesheet('player-walk', 'assets/players/walk.png', { frameWidth: 64, frameHeight: 64 });
+        scene.load.spritesheet('player-jump', 'assets/players/jump.png', { frameWidth: 64, frameHeight: 64 });
+        scene.load.spritesheet('player-land', 'assets/players/land.png', { frameWidth: 64, frameHeight: 64 });
+        scene.load.spritesheet('player-shoot', 'assets/players/shoot.png', { frameWidth: 64, frameHeight: 64 });
+        scene.load.spritesheet('player-punch', 'assets/players/punch.png', { frameWidth: 64, frameHeight: 64 });
+        scene.load.spritesheet('player-sword-stab', 'assets/players/stab.png', { frameWidth: 96, frameHeight: 64 });
+        scene.load.spritesheet('player-sword-attack', 'assets/players/attack.png', { frameWidth: 64, frameHeight: 64 });
+        scene.load.spritesheet('player-sword-run', 'assets/players/run.png', { frameWidth: 64, frameHeight: 64 });
+    }
+
+    createCamera() {
+        this.scene.cameras.main.startFollow(this, true);
+        this.scene.cameras.main.setZoom(2);
     }
 
     createAnimation() {
@@ -39,22 +75,117 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             frameRate: 9,
             repeat: -1
         });
-
         this.scene.anims.create({
             key: 'walk',
             frames: this.anims.generateFrameNumbers('player-walk', { start: 0, end: 7 }),
             frameRate: 8,
             repeat: -1
         });
+        this.scene.anims.create({
+            key: 'jump',
+            frames: this.anims.generateFrameNumbers('player-jump', { start: 0, end: 2 }),
+            frameRate: 2,
+            repeat: -1
+        });
+        this.scene.anims.create({
+            key: 'land',
+            frames: this.anims.generateFrameNumbers('player-land', { start: 0, end: 8 }),
+            frameRate: 16,
+            repeat: -1
+        });
+        this.scene.anims.create({
+            key: 'run',
+            frames: this.anims.generateFrameNumbers('player-sword-run', { start: 0, end: 7 }),
+            frameRate: 14,
+            repeat: -1
+        });
+
+        this.scene.anims.create({
+            key: 'punch',
+            frames: this.anims.generateFrameNumbers('player-punch', { start: 0, end: 7 }),
+            frameRate: 16,
+            repeat: 0
+        });
+        this.on(Phaser.Animations.Events.ANIMATION_UPDATE, (ani: Phaser.Animations.Animation, frame: Phaser.Animations.AnimationFrame) => {
+            if (ani.key === 'punch' && frame.index == 5) {
+                const distance = 37
+                const w = this.flipX ? distance : 0;
+                const bodies = this.scene.physics.overlapRect(this.x - w, this.y, distance, 3);
+                bodies.forEach(x => {
+                    if (x.gameObject.name !== 'Player') {
+                        x.gameObject.destroy();
+                        // this.scene.cameras.main.flash();
+                    }
+                });
+            }
+        })
+
+        this.scene.anims.create({
+            key: 'stab',
+            frames: this.anims.generateFrameNumbers('player-sword-stab', { start: 0, end: 6 }),
+            frameRate: 16,
+            repeat: 0
+        });
+        this.on(Phaser.Animations.Events.ANIMATION_UPDATE, (ani: Phaser.Animations.Animation, frame: Phaser.Animations.AnimationFrame) => {
+            if (ani.key === 'stab' && frame.index == 5) {
+                const distance = 41 
+                const w = this.flipX ? distance : 0;
+                const bodies = this.scene.physics.overlapRect(this.x - w, this.y, distance, 3);
+                bodies.forEach(x => {
+                    if (x.gameObject.name !== 'Player') {
+                        x.gameObject.destroy();
+                        // this.scene.cameras.main.flash();
+                    }
+                });
+            }
+        })
+
+        this.scene.anims.create({
+            key: 'attack',
+            frames: this.anims.generateFrameNumbers('player-sword-attack', { start: 0, end: 5 }),
+            frameRate: 16,
+            repeat: 0
+        });
+        this.on(Phaser.Animations.Events.ANIMATION_UPDATE, (ani: Phaser.Animations.Animation, frame: Phaser.Animations.AnimationFrame) => {
+            if (ani.key === 'attack' && frame.index > 2 ) {
+                const distance = 41 
+                const bodies = this.scene.physics.overlapCirc(this.x, this.y, distance);
+                bodies.forEach(x => {
+                    if (x.gameObject.name !== 'Player') {
+                        x.gameObject.destroy();
+                        // this.scene.cameras.main.flash();
+                    }
+                });
+            }
+        })
+
+        this.scene.anims.create({
+            key: 'shoot',
+            frames: this.anims.generateFrameNumbers('player-shoot', { start: 0, end: 9 }),
+            frameRate: 16,
+            repeat: 0
+        });
+        this.on(Phaser.Animations.Events.ANIMATION_UPDATE, (ani: Phaser.Animations.Animation, frame: Phaser.Animations.AnimationFrame) => {
+            if (ani.key === 'shoot' && frame.index == 4) {
+                const distance =  400;
+                const w = this.flipX ? distance : 0;
+                const bodies = this.scene.physics.overlapRect(this.x - w, this.y, distance, 3);
+                bodies.forEach(x => {
+                    if (x.gameObject.name !== 'Player') {
+                        x.gameObject.destroy();
+                        this.scene.cameras.main.flash();
+                    }
+                });
+            }
+        })
+        
     }
 
     public update() {
-
-        if(this.body!.deltaY() > 0 ){ 
-
-        }
-
         this.setVelocityX(0);
+        this.onGround()
+
+        let useSkill = false;
 
         let isIdle = true;
 
@@ -68,6 +199,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             isIdle = false
         }
 
+        if (this.keySpace?.isDown) {
+            this.doJump();
+            isIdle = false
+        }
+
         if (this.keyA?.isDown) {
             this.doLeft();
             isIdle = false;
@@ -78,53 +214,99 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
             isIdle = false;
         }
 
-        console.log(isIdle)
-        if (isIdle== true) {
-           this.doIdle(); 
+        if (this.keyJ?.isDown && useSkill == false) {
+            this.doPunch();
+            isIdle = false;
+            useSkill = true;
         }
 
-    }
+        if (this.keyK?.isDown && useSkill == false) {
+            this.doStab();
+            isIdle = false;
+            useSkill = true;
+        }
 
-    private flip() {
-        if (this.body!.velocity.x < 0) {
-            this.scaleX = -1;
-        } else {
-            this.scaleX = 1;
+        if (this.keyL?.isDown && useSkill == false) {
+            this.doAttack();
+            isIdle = false;
+            useSkill = true;
+        }
+
+        if (this.keyN?.isDown && useSkill == false) {
+            this.doShoot();
+            isIdle = false;
+            useSkill = true;
+        }
+
+        if (isIdle == true) {
+            this.doIdle();
         }
     }
 
-    private idleTimer?: NodeJS.Timeout
+    iAmPlayer() { return true; }
+
+    onGround(): boolean {
+        return this.body!.deltaY() > 0 && this.body!.deltaY() < 1
+    }
+
     public doIdle() {
         this.play('idle', true);
-        this.state = 'idle';
+        this.setDefaultBox();
     }
 
     public doLeft() {
-        console.log('Left')
-        this.setVelocityX(-400);
-        this.body!.setOffset(35, 15);
-        this.flip();
-        this.play('walk', true);
-
+        this.setVelocityX(-200);
+        this.setFlipX(true);
+        this.play('run', true);
+        this.setDefaultBox();
+        this.xdir = XDirection.Left
     }
 
     public doRight() {
-        this.setVelocityX(400);
-        console.log('Right')
-        this.flip();
-        this.play('walk', true);
-        this.body!.setOffset(5, 15);
+        this.setVelocityX(200);
+        this.setFlipX(false);
+        this.play('run', true);
+        this.setDefaultBox();
+        this.xdir = XDirection.Right
     }
 
     public doUp() {
-        console.log('Up')
         this.play('walk');
         this.setVelocityY(-100);
+        this.setDefaultBox();
+        this.ydir = YDirection.Up
+    }
+
+    public doJump() {
+        this.play('jump');
+        this.setVelocityY(-150);
+        this.setDefaultBox();
+        this.ydir = YDirection.Up
     }
 
     public doDown() {
-        console.log('Down')
-        this.setVelocityY(100);
         this.play('idle');
+        this.setDefaultBox();
+        this.ydir = YDirection.Down
+    }
+
+    public doPunch() {
+        this.play('punch', true);
+        this.setDefaultBox();
+    }
+
+    public doShoot() {
+        this.play('shoot', true);
+        this.setDefaultBox();
+    }
+
+    public doStab() {
+        this.play('stab', true);
+        this.setDefaultBox();
+    }
+
+    public doAttack() {
+        this.setDefaultBox();
+        this.play('attack', true);
     }
 }

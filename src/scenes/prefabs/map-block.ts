@@ -23,3 +23,17 @@ export class MapBlock extends GameObjects.Sprite {
 
     }
 }
+
+// const bals = this.objects.search({ minX: this.x, minY: this.y, maxX: this.x + 41, maxY: this.y })
+// if (bals.length) {
+//     bals.forEach((ball: any) => {
+//         ball.sprite.destroy();
+//         this.objects.impl().remove(ball)
+//     })
+// }
+
+
+// this.once(Phaser.Animations.Events.ANIMATION_COMPLETE, ()=> {
+//     console.log(Phaser.Animations.Events.ANIMATION_COMPLETE)
+//     this.doIdle();
+// })

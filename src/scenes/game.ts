@@ -16,6 +16,7 @@ export class GameScene extends Scene {
     }
 
     create() {
+        
     }
 
 

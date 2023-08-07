@@ -14,14 +14,18 @@ const config : Types.Core.GameConfig = {
         default: 'arcade',
         arcade: {
             gravity: { y: 300 },
-            debug: false
+            // debug: true
         }
     },
     scene: [
-        PreloadScene,
-        GameScene
+        PreloadScene
     ]
 }
 
-new Game(config);
+let game = new Game(config);
+
+
+
+
+
 
