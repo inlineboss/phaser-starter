@@ -32,6 +32,9 @@ export class PreloadScene extends Scene {
         this.createPlayer();
         this.createBalls();
         this.createStone();
+
+        this.cameras.main.startFollow(this.player, true);
+        this.cameras.main.setZoom(2);
     }
 
     createMap() {
@@ -74,8 +77,8 @@ export class PreloadScene extends Scene {
     createStone() {
 
         let stones:Phaser.Types.Physics.Arcade.SpriteWithDynamicBody[] = [];
-        for (let x = 0; x < this.border.width; x+=15) {
-            for (let y = 0; y < this.border.height; y+=15) {
+        for (let x = 0; x < this.border.width; x+=48) {
+            for (let y = 0; y < this.border.height; y+=48) {
 
                 let sprite = this.physics.add.sprite(
                     x,
@@ -83,10 +86,17 @@ export class PreloadScene extends Scene {
                     'tiles-object', 9
                 );
                 sprite.body.setAllowGravity(false)
+                sprite.setScale(3)
+                // sprite.setMaxVelocity(0)
+                sprite.setImmovable(true);
+
+                // sprite.body.setAcceleration(10, 20)
+
                 stones.push(sprite);
             }
         }
 
+        this.physics.add.collider(this.player, stones);
 
 
         // this.background.filterTiles((obj:any) => {
