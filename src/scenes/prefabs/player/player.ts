@@ -351,8 +351,6 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     updateVelocityOnGround() {
-        console.log('velocity');
-
         if (this.inputMove.D.isDown) {
             this.setVelocityX(this.useSkill ? 50 : 200);
         }

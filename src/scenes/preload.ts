@@ -7,6 +7,7 @@ export class PreloadScene extends Scene {
     private balls!: Phaser.GameObjects.Sprite[];
     private background!: Tilemaps.TilemapLayer;
     private border!: Tilemaps.TilemapLayer;
+    private light!: Phaser.GameObjects.Light;
     constructor() {
         super('PreloadScene');
     }
@@ -14,24 +15,18 @@ export class PreloadScene extends Scene {
     preload() {
         this.initMap();
         Player.preload(this);
-
     }
 
     initMap() {
-        this.load.image('tiles', 'assets/map/DarkCastle.png');
+        this.load.image('background', 'assets/map/DarkMetal.png');
+        this.load.image('border', 'assets/map/Stone.png');
+        this.load.image('terra', 'assets/map/Stone.png');
         this.load.tilemapTiledJSON('map', 'assets/map/map.json');
-        this.load.spritesheet('tiles-object', 'assets/map/DarkCastle.png', {
-            frameWidth: 16,
-            frameHeight: 16
-        });
-
     }
 
     create() {
         this.createMap();
         this.createPlayer();
-        this.createBalls();
-        this.createStone();
 
         this.cameras.main.startFollow(this.player, true);
         this.cameras.main.setZoom(2);
@@ -39,83 +34,59 @@ export class PreloadScene extends Scene {
 
     createMap() {
         this.map = this.make.tilemap({ key: 'map' })
-        const tileset = this.map.addTilesetImage('tileset', 'tiles')!
-        this.background = this.map.createLayer('background', tileset, 0, 0)!;
-        this.border = this.map.createLayer('border', tileset, 0, 0)!;
-        this.physics.world.setBounds(0, 0, this.border.width, this.border.height)
+        this.background =
+            this.map.createLayer('background',
+                this.map.addTilesetImage('background', 'background')!
+            )!;
+
+        this.border =
+            this.map.createLayer('border',
+                this.map.addTilesetImage('stone', 'border')!
+            )!;
+
+        this.physics.world.setBounds(0, 0, this.map.width, this.map.height)
         this.border.setCollisionBetween(1, 1);
     }
 
     createPlayer() {
-        this.player = new Player(this, 100, 600);
+        this.player = new Player(this, 43, 2513);
         this.physics.add.existing(this.player);
         this.physics.add.collider(this.player, this.border)
         this.player.create();
-    }
 
-    createBalls() {
-        const balls = this.map.filterObjects('Balls', obj => obj.name === 'ball');
-
-        this.balls = balls!.map(ball => {
-            let sprite = this.physics.add.sprite(
-                ball.x as number,
-                ball.y as number,
-                'tiles-object', 9
-            );
-            sprite.setScale(1.5).setVisible(true).body.setAllowGravity(false);
-
-            return sprite;
-        })
-
-        this.balls.forEach(ball => {
-            this.physics.add.overlap(this.player, ball, (obj1, obj2) => {
-                obj2.destroy();
-            });
-        });
+        console.log(this.lights.getMaxVisibleLights());
+        this.light = this.lights.addLight(this.player.x, this.player.y, 43, 0xffffff);
     }
 
     createStone() {
 
-        let stones:Phaser.Types.Physics.Arcade.SpriteWithDynamicBody[] = [];
-        for (let x = 0; x < this.border.width; x+=48) {
-            for (let y = 0; y < this.border.height; y+=48) {
+        let stones: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody[] = [];
+        for (let x = 0; x < this.map.width * 32; x += 32) {
+            for (let y = 0; y < this.map.height * 32; y += 32) {
 
                 let sprite = this.physics.add.sprite(
-                    x,
-                    y,
-                    'tiles-object', 9
+                    x, y,
+                    'terra'
                 );
                 sprite.body.setAllowGravity(false)
-                sprite.setScale(3)
-                // sprite.setMaxVelocity(0)
+                sprite.setOrigin(0,0)
                 sprite.setImmovable(true);
-
-                // sprite.body.setAcceleration(10, 20)
 
                 stones.push(sprite);
             }
         }
 
         this.physics.add.collider(this.player, stones);
-
-
-        // this.background.filterTiles((obj:any) => {
-
-        //     // console.log(obj, obj.x as number, obj.y as number)
-        //     let sprite = this.physics.add.sprite(
-        //         obj.x as number,
-        //         obj.y as number,
-        //         'tiles-object', 9
-        //     );
-        //     sprite.setVisible(true).body.setAllowGravity(false);
-            // this.physics.add.overlap(this.player, stones, (obj1, obj2) => {
-            //     obj2.destroy();
-            //   });
-        // })
-
     }
 
+    private postLoad = false;
     update() {
+        if (!this.postLoad) {
+            this.createStone()
+            this.postLoad = true
+        }
+
         this.player.update();
+        this.light.setPosition(this.player.x, this.player.y)
     }
 }
